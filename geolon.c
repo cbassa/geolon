@@ -61,7 +61,13 @@ double nfd2mjd(char *date)
 
 void usage()
 {
-  printf("Usage goes here.\n");
+  printf("geolon -c <tlefile> -i [NORAD ID] -t [TIME] -q -h\n\n");
+  printf("This program prints out Earth longitude/latitude/altitude of\n geostationary satellites (mean motion between 0.8 and 1.2 revs/day.\n\n");
+  printf("-c <tlefile>    TLE catalog file [default: none]\n");
+  printf("-i [NORAD ID]   NORAD Identifier [default: 0 (all)\n");
+  printf("-t [TIME]       UTC Date/time (yyyy-mm-ddThh:mm:ss.ss) [default: now]\n");
+  printf("-q              Do not print header\n");
+  printf("-h              Print this help\n\n");
   
   return;
 }
@@ -155,8 +161,8 @@ void compute_longitude(char *tlefile,long satno,double mjd)
 
 int main(int argc,char *argv[])
 {
-  int arg=0;
-  long satno;
+  int arg=0,quiet=0;
+  long satno=0;
   double mjd;
   char nfd[LIM],tlefile[LIM];
 
@@ -165,40 +171,51 @@ int main(int argc,char *argv[])
 
   
   // Decode options
-  while ((arg=getopt(argc,argv,"t:c:i:h"))!=-1) {
-    switch (arg) {
-      
-    case 't':
-      strcpy(nfd,optarg);
-      mjd=nfd2mjd(nfd);
-      break;
+  if (argc>1) {
+    while ((arg=getopt(argc,argv,"t:c:i:hq"))!=-1) {
+      switch (arg) {
+	
+      case 't':
+	strcpy(nfd,optarg);
+	mjd=nfd2mjd(nfd);
+	break;
+	
+      case 'c':
+	strcpy(tlefile,optarg);
+	break;
+	
+      case 'i':
+	satno=atoi(optarg);
+	break;
+	
+      case 'h':
+	usage();
+	return 0;
+	break;
 
-    case 'c':
-      strcpy(tlefile,optarg);
-      break;
-
-    case 'i':
-      satno=atoi(optarg);
-      break;
-
-    case 'h':
-      usage();
-      return 0;
-      break;
-      
-    default:
-      usage();
-      return 0;
+      case 'q':
+	quiet=1;
+	break;
+	
+      default:
+	usage();
+	return 0;
+      }
     }
+  } else {
+    usage();
+    return 0;
+  }    
+
+  // Print header
+  if (!quiet) {
+    printf("NORAD   COSPAR   Long.     Lat.     Alt.\n");
+    printf("                    (deg)    (deg)   (km)\n");
+    printf("=========================================\n");
   }
 
+  // Compute longitudes of satellites
   compute_longitude(tlefile,satno,mjd);
-
-
-
-
-
-
 
   return 0;
 }
